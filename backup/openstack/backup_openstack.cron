@@ -1,5 +1,6 @@
 #!/bin/bash
 # author: Cristian Spoiala scristian@gmail.com
+
 # TODO: output to /var/log/backup
 
 BACKUP_USER="YOUR_USER"
@@ -13,15 +14,15 @@ RSYNC_OPTS="-az --delete --progress"
 NOVA_EXCLUDE="/etc/cron.daily/nova_exclude.txt"
 
 DB_BACKUP="/tmp/mysql-`hostname`-`eval date +%Y%m%d`.sql.gz"
-CONFIG_ARCHIVE="/etc-`hostname`-`eval date +%Y%m%d`.tar.gz"
+CONFIG_ARCHIVE="/tmp/etc-`hostname`-`eval date +%Y%m%d`.tar.gz"
 SOURCE_GLANCE="/var/lib/glance/images"
 SOURCE_NOVA="/var/lib/nova"
+SOURCE_CINDER="/var/lib/cinder"
 
 echo "performing db backup: $DB_BACKUP";
 
 # Dump the entire MySQL database
 /usr/bin/mysqldump --opt --all-databases | gzip > $DB_BACKUP
-#/usr/bin/mysqldump --opt mysql | gzip > $DB_BACKUP
 
 #do a local backup
 cp $DB_BACKUP "$LOCAL_DESTINATION/mysql"
@@ -61,4 +62,7 @@ echo "performing backup of nova"
 rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
 
 #sync cinder
-#work in progress
+echo "performing backup of cinder"
+rsync $RSYNC_OPTS $SOURCE_CINDER "$DESTINATION/cinder/"
+
+
