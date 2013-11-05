@@ -20,8 +20,8 @@ SOURCE_NOVA="/var/lib/nova"
 echo "performing db backup: $DB_BACKUP";
 
 # Dump the entire MySQL database
-#/usr/bin/mysqldump --opt --all-databases | gzip > $DB_BACKUP
-/usr/bin/mysqldump --opt mysql | gzip > $DB_BACKUP
+/usr/bin/mysqldump --opt --all-databases | gzip > $DB_BACKUP
+#/usr/bin/mysqldump --opt mysql | gzip > $DB_BACKUP
 
 #do a local backup
 cp $DB_BACKUP "$LOCAL_DESTINATION/mysql"
