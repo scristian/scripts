@@ -1,0 +1,64 @@
+#!/bin/bash
+# author: Cristian Spoiala scristian@gmail.com
+# TODO: output to /var/log/backup
+
+BACKUP_USER="YOUR_USER"
+BACKUP_HOST="YOUR_HOST"
+BACKUP_LOCATION="/backup"
+
+LOCAL_DESTINATION="/home/backup"
+DESTINATION=$BACKUP_USER@$BACKUP_HOST:$BACKUP_LOCATION
+
+RSYNC_OPTS="-az --delete --progress"
+NOVA_EXCLUDE="/etc/cron.daily/nova_exclude.txt"
+
+DB_BACKUP="/tmp/mysql-`hostname`-`eval date +%Y%m%d`.sql.gz"
+CONFIG_ARCHIVE="/etc-`hostname`-`eval date +%Y%m%d`.tar.gz"
+SOURCE_GLANCE="/var/lib/glance/images"
+SOURCE_NOVA="/var/lib/nova"
+
+echo "performing db backup: $DB_BACKUP";
+
+# Dump the entire MySQL database
+#/usr/bin/mysqldump --opt --all-databases | gzip > $DB_BACKUP
+/usr/bin/mysqldump --opt mysql | gzip > $DB_BACKUP
+
+#do a local backup
+cp $DB_BACKUP "$LOCAL_DESTINATION/mysql"
+
+#send db backup to remote backup machine
+if [ -f $DB_BACKUP ]; then
+	scp $DB_BACKUP $DESTINATION
+	
+	#delete file if scp was with success
+	if [ $? -eq 0 ]; then
+	 rm $DB_BACKUP
+	fi
+fi
+
+#backup etc
+echo "performing etc backup: $CONFIG_ARCHIVE"
+tar -czf $CONFIG_ARCHIVE /etc
+
+#local backup
+cp $CONFIG_ARCHIVE "$LOCAL_DESTINATION/etc"
+
+#remote backup
+if [ -f $CONFIG_ARCHIVE ]; then
+	scp $CONFIG_ARCHIVE $DESTINATION
+	
+	if [ $? -eq 0 ]; then
+  		rm $CONFIG_ARCHIVE
+	fi
+fi
+
+#sync glances images to remote
+echo "performing backup of glance"
+rsync $RSYNC_OPTS $SOURCE_GLANCE "$DESTINATION/glance/"
+
+#sync nova
+echo "performing backup of nova"
+rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
+
+#sync cinder
+#work in progress
