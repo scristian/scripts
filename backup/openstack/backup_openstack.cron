@@ -63,6 +63,10 @@ rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
 
 #sync cinder
 echo "performing backup of cinder"
-rsync $RSYNC_OPTS $SOURCE_CINDER "$DESTINATION/cinder/"
+#first create files in sparse mode
+rsync $RSYNC_OPTS --ignore-existing --sparse $SOURCE_CINDER "$DESTINATION/cinder/"
+
+#sync only the changes
+rsync $RSYNC_OPTS --inplace $SOURCE_CINDER "$DESTINATION/cinder/"
 
 
