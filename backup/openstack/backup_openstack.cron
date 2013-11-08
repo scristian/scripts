@@ -29,7 +29,7 @@ cp $DB_BACKUP "$LOCAL_DESTINATION/mysql"
 
 #send db backup to remote backup machine
 if [ -f $DB_BACKUP ]; then
-	scp $DB_BACKUP $DESTINATION
+	scp $DB_BACKUP "$DESTINATION/mysql/"
 	
 	#delete file if scp was with success
 	if [ $? -eq 0 ]; then
@@ -46,7 +46,7 @@ cp $CONFIG_ARCHIVE "$LOCAL_DESTINATION/etc"
 
 #remote backup
 if [ -f $CONFIG_ARCHIVE ]; then
-	scp $CONFIG_ARCHIVE $DESTINATION
+	scp $CONFIG_ARCHIVE "$DESTINATION/etc/"
 	
 	if [ $? -eq 0 ]; then
   		rm $CONFIG_ARCHIVE
@@ -54,19 +54,26 @@ if [ -f $CONFIG_ARCHIVE ]; then
 fi
 
 #sync glances images to remote
-echo "performing backup of glance"
-rsync $RSYNC_OPTS $SOURCE_GLANCE "$DESTINATION/glance/"
+if [ -d $SOURCE_GLANCE ]; then
+	echo "performing backup of glance"
+	rsync $RSYNC_OPTS $SOURCE_GLANCE "$DESTINATION/glance/"
+fi
 
 #sync nova
-echo "performing backup of nova"
-rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
+if [ -d $SOURCE_NOVA ]; then
+	echo "performing backup of nova"
+	rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
+fi
 
 #sync cinder
-echo "performing backup of cinder"
+# disabled as rsync is not very efficient working with sparse files
+# use tar -S instead
+
+#echo "performing backup of cinder"
 #first create files in sparse mode
-rsync $RSYNC_OPTS --ignore-existing --sparse $SOURCE_CINDER "$DESTINATION/cinder/"
+#rsync $RSYNC_OPTS --ignore-existing --sparse $SOURCE_CINDER "$DESTINATION/cinder/"
 
 #sync only the changes
-rsync $RSYNC_OPTS --inplace $SOURCE_CINDER "$DESTINATION/cinder/"
+#rsync $RSYNC_OPTS --inplace $SOURCE_CINDER "$DESTINATION/cinder/"
 
-
+exit 0
