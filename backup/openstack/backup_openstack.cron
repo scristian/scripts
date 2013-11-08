@@ -3,6 +3,13 @@
 
 # TODO: output to /var/log/backup
 
+#------------ CONFIG -------------------
+ENABLE_BACKUP_MYSQL=1
+ENABLE_BACKUP_ETC=1
+ENABLE_BACKUP_GLANCE=1
+ENABLE_BACKUP_NOVA=1
+ENABLE_BACKUP_CINDER=0
+
 BACKUP_USER="YOUR_USER"
 BACKUP_HOST="YOUR_HOST"
 BACKUP_LOCATION="/backup"
@@ -18,51 +25,60 @@ CONFIG_ARCHIVE="/tmp/etc-`hostname`-`eval date +%Y%m%d`.tar.gz"
 SOURCE_GLANCE="/var/lib/glance/images"
 SOURCE_NOVA="/var/lib/nova"
 SOURCE_CINDER="/var/lib/cinder"
+#------------ CONFIG -------------------
 
-echo "performing db backup: $DB_BACKUP";
+if [ $ENABLE_BACKUP_MYSQL -eq 1 ]; then
+	echo "performing db backup: $DB_BACKUP";
 
-# Dump the entire MySQL database
-/usr/bin/mysqldump --opt --all-databases | gzip > $DB_BACKUP
+	# Dump the entire MySQL database
+	/usr/bin/mysqldump --opt --all-databases | gzip > $DB_BACKUP
 
-#do a local backup
-cp $DB_BACKUP "$LOCAL_DESTINATION/mysql"
+	#do a local backup
+	cp $DB_BACKUP "$LOCAL_DESTINATION/mysql"
 
-#send db backup to remote backup machine
-if [ -f $DB_BACKUP ]; then
-	scp $DB_BACKUP "$DESTINATION/mysql/"
+	#send db backup to remote backup machine
+	if [ -f $DB_BACKUP ]; then
+		scp $DB_BACKUP "$DESTINATION/mysql/"
 	
-	#delete file if scp was with success
-	if [ $? -eq 0 ]; then
-	 rm $DB_BACKUP
+		#delete file if scp was with success
+		if [ $? -eq 0 ]; then
+		 rm $DB_BACKUP
+		fi
 	fi
 fi
 
 #backup etc
-echo "performing etc backup: $CONFIG_ARCHIVE"
-tar -czf $CONFIG_ARCHIVE /etc
+if [ $ENABLE_BACKUP_ETC -eq 1 ]; then
+	echo "performing etc backup: $CONFIG_ARCHIVE"
+	tar -czf $CONFIG_ARCHIVE /etc
 
-#local backup
-cp $CONFIG_ARCHIVE "$LOCAL_DESTINATION/etc"
+	#local backup
+	cp $CONFIG_ARCHIVE "$LOCAL_DESTINATION/etc"
 
-#remote backup
-if [ -f $CONFIG_ARCHIVE ]; then
-	scp $CONFIG_ARCHIVE "$DESTINATION/etc/"
+	#remote backup
+	if [ -f $CONFIG_ARCHIVE ]; then
+		scp $CONFIG_ARCHIVE "$DESTINATION/etc/"
 	
-	if [ $? -eq 0 ]; then
-  		rm $CONFIG_ARCHIVE
+		if [ $? -eq 0 ]; then
+  			rm $CONFIG_ARCHIVE
+		fi
 	fi
 fi
 
 #sync glances images to remote
-if [ -d $SOURCE_GLANCE ]; then
-	echo "performing backup of glance"
-	rsync $RSYNC_OPTS $SOURCE_GLANCE "$DESTINATION/glance/"
+if [ $ENABLE_BACKUP_GLANCE -eq 1 ]; then
+	if [ -d $SOURCE_GLANCE ]; then
+		echo "performing backup of glance"
+		rsync $RSYNC_OPTS $SOURCE_GLANCE "$DESTINATION/glance/"
+	fi
 fi
 
 #sync nova
-if [ -d $SOURCE_NOVA ]; then
-	echo "performing backup of nova"
-	rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
+if [ $ENABLE_BACKUP_NOVA -eq 1 ]; then
+	if [ -d $SOURCE_NOVA ]; then
+		echo "performing backup of nova"
+		rsync $RSYNC_OPTS --exclude-from=$NOVA_EXCLUDE $SOURCE_NOVA "$DESTINATION/nova"
+	fi
 fi
 
 #sync cinder
