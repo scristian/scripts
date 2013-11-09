@@ -1,0 +1,31 @@
+#!/bin/bash
+# author: Cristian Spoiala scristian@gmail.com
+
+BACKUP_USER="YOUR_USER"
+BACKUP_HOST="YOUR_HOST"
+BACKUP_LOCATION="/servers/openstack/backup"
+
+DESTINATION=$BACKUP_USER@$BACKUP_HOST:$BACKUP_LOCATION
+
+SOURCE_CINDER="/var/lib/cinder/mnt/f0b2f11c4fc3c8526ac9a74001bdfe6c"
+cd $SOURCE_CINDER
+
+for f in *
+do 
+	DB_BACKUP="/tmp/cinder-`hostname`-$f-`eval date +%Y%m%d`.tar.gz"
+	echo "creating archive for $DB_BACKUP"
+	tar cvfzS $DB_BACKUP $f
+	
+	#send db backup to remote backup machine
+	if [ -f $DB_BACKUP ]; then
+		scp $DB_BACKUP "$DESTINATION/cinder/"
+		
+		#delete file if scp was with success
+		if [ $? -eq 0 ]; then
+	 		rm $DB_BACKUP
+		fi
+	fi
+
+done
+
+exit 0
