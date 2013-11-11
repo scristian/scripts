@@ -1,0 +1,23 @@
+1. get power consumption
+http://www.oidview.com/mibs/2/BLADE-MIB.html
+
+snmpwalk -v1 -c private 192.168.200.2:161 1.3.6.1.4.1.2.3.51.2.2.10.2.1.1.7
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.1 = STRING: "10W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.2 = STRING: "10W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.3 = STRING: "52W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.4 = STRING: "56W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.5 = STRING: "25W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.6 = STRING: "0W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.7 = STRING: "45W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.8 = STRING: "45W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.9 = STRING: "0W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.10 = STRING: "45W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.11 = STRING: "81W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.12 = STRING: "60W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.13 = STRING: "13W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.14 = STRING: "123W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.15 = STRING: "13W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.16 = STRING: "119W"
+SNMPv2-SMI::enterprises.2.3.51.2.2.10.2.1.1.7.17 = STRING: "697W"
+
+
