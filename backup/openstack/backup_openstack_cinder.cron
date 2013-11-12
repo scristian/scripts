@@ -8,13 +8,13 @@ BACKUP_LOCATION="/servers/openstack/backup"
 DESTINATION=$BACKUP_USER@$BACKUP_HOST:$BACKUP_LOCATION
 
 SOURCE_CINDER="/var/lib/cinder/mnt/f0b2f11c4fc3c8526ac9a74001bdfe6c"
-cd $SOURCE_CINDER
+cd $SOURCE_CINDER || { echo "Can't cd to $SOURCE_CINDER."; exit 1; }
 
 for f in *
 do 
 	DB_BACKUP="/tmp/cinder-`hostname`-$f-`eval date +%Y%m%d`.tar.gz"
 	echo "creating archive for $DB_BACKUP"
-	tar cvfzS $DB_BACKUP $f
+	tar cvfzS $DB_BACKUP "$f"
 	
 	#send db backup to remote backup machine
 	if [ -f $DB_BACKUP ]; then
