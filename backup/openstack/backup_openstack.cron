@@ -1,7 +1,8 @@
 #!/bin/bash
 # author: Cristian Spoiala scristian@gmail.com
 
-# TODO: output to /var/log/backup
+# use it with cron
+# 0 1 * * * /root/cron_scripts/backup_openstack.cron &> /var/log/backup_openstack.log
 
 #------------ CONFIG -------------------
 ENABLE_BACKUP_MYSQL=1
@@ -12,7 +13,7 @@ ENABLE_BACKUP_CINDER=0
 
 BACKUP_USER="YOUR_USER"
 BACKUP_HOST="YOUR_HOST"
-BACKUP_LOCATION="/backup"
+BACKUP_LOCATION="/servers/openstack/backup"
 
 LOCAL_DESTINATION="/home/backup"
 DESTINATION=$BACKUP_USER@$BACKUP_HOST:$BACKUP_LOCATION
@@ -91,5 +92,7 @@ fi
 
 #sync only the changes
 #rsync $RSYNC_OPTS --inplace $SOURCE_CINDER "$DESTINATION/cinder/"
+
+echo "BACKUP FINISHED""
 
 exit 0
