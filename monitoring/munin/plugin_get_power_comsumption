@@ -1,0 +1,53 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+# vim: ft=perl
+#
+# Copyright (C) 2013 Cristian Spoiala
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+# Plugin to fetch total power consumption from the IBM Blade Center SNMP agent 
+#
+
+use strict;
+
+use Net::SNMP qw(oid_lex_sort);
+use Munin::Plugin::SNMP;
+
+# The OIDs for total power
+my $Base = '1.3.6.1.4.1.2.3.51.2.2.10.2.1.1.7.17';
+
+my $session = Munin::Plugin::SNMP->session(-translate =>
+                                           [ -timeticks => 0x0 ]);
+
+my $total_power = $session->get_single ($Base) || 'U';
+
+my $unit = chop($total_power);
+
+if (defined $ARGV[0] and $ARGV[0] eq "config")
+{
+    print "host_name monitoring\n";
+    print "graph_title Blade Center Total Power Consumption\n";
+    print "graph_category blade_center\n";
+    print "graph_vlabel Watts\n";
+    print "graph_info This graph shows power consumption.\n";    
+    print "graph_args --base 1024 -l 0\n";   
+    print "totalpower.draw AREA\n";
+    print "totalpower.label Blade Center Total Power Consumption\n";
+
+    exit 0;
+}
+print "totalpower.value ", $total_power, "\n";
