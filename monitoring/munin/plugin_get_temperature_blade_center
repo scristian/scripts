@@ -1,0 +1,52 @@
+#!/usr/bin/perl -w
+# -*- perl -*-
+# vim: ft=perl
+#
+# Copyright (C) 2013 Cristian Spoiala
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2 dated June,
+# 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+# Plugin to fetch ambient temperature from the IBM Blade Center SNMP agent 
+#
+
+use strict;
+
+use Net::SNMP qw(oid_lex_sort);
+use Munin::Plugin::SNMP;
+
+# The OIDs for ambient temperature
+my $Base = '1.3.6.1.4.1.2.3.51.2.2.1.5.1.0';
+
+my $session = Munin::Plugin::SNMP->session();
+
+my $temp = $session->get_single ($Base) || 'U';
+
+my @temp_s = split (/ /,$temp);
+
+if (defined $ARGV[0] and $ARGV[0] eq "config")
+{
+    print "host_name monitoring\n";
+    print "graph_title Blade Center Ambient Temperature\n";
+    print "graph_category blade_center\n";
+    print "graph_vlabel Celsius degrees\n";
+    print "graph_info This graph shows ambient temperature.\n";    
+    print "graph_args --upper-limit 100 -l 0\n";   
+    print "blade_temp.draw LINE2\n";
+    print "blade_temp.label Blade Center Ambient Temperature\n";
+
+    exit 0;
+}
+print "blade_temp.value ", $temp_s[0], "\n";
