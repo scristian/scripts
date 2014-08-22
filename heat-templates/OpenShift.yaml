@@ -49,6 +49,7 @@ resources:
       - {IpProtocol: tcp, FromPort: '22', ToPort: '22', CidrIp: 0.0.0.0/0}
       - {IpProtocol: tcp, FromPort: '80', ToPort: '80', CidrIp: 0.0.0.0/0}
       - {IpProtocol: tcp, FromPort: '443', ToPort: '443', CidrIp: 0.0.0.0/0}
+      - {IpProtocol: tcp, FromPort: '61613', ToPort: '61613', CidrIp: 0.0.0.0/0}
       - {IpProtocol: tcp, FromPort: '8000', ToPort: '8000', CidrIp: 0.0.0.0/0}
       - {IpProtocol: tcp, FromPort: '8443', ToPort: '8443', CidrIp: 0.0.0.0/0}
 
@@ -73,26 +74,29 @@ resources:
 
             yum install -y puppet facter tar bind
             mkdir -p /etc/puppet/modules && cd /etc/puppet/modules
-            puppet module install openshift/openshift_origin --version 3.0.1
+            puppet module install openshift/openshift_origin --version 4.0.8
 
             /usr/sbin/dnssec-keygen -a HMAC-MD5 -b 512 -n USER -r /dev/urandom -K /var/named $dns_prefix$
             export DNS_SEC_KEY="`cat /var/named/K$dns_prefix$.*.key  | awk '{print $8}'`"
 
             cat << EOF > configure_origin.pp
             class { 'openshift_origin' :
-                roles => ['broker','named','activemq','datastore'],
+                roles => ['broker','nameserver','msgserver','datastore'],
                 broker_hostname => 'broker.$dns_prefix$',
-                named_hostname => 'broker.$dns_prefix$',
+                nameserver_hostname => 'broker.$dns_prefix$',
                 datastore_hostname => 'broker.$dns_prefix$',
-                activemq_hostname => 'broker.$dns_prefix$',
+                msgserver_hostname => 'broker.$dns_prefix$',
                 bind_key => '${DNS_SEC_KEY}',
                 domain => '$dns_prefix$',
-                register_host_with_named => true,
-                conf_named_upstream_dns => ['$dns_server$'],
+                register_host_with_nameserver => true,
+                conf_nameserver_upstream_dns => ['$dns_server$'],
                 broker_auth_plugin => 'htpasswd',
                 openshift_user1 => '$user_name$',
                 openshift_password1 => '$password$',
                 development_mode => true,
+                install_method => 'yum',
+                repos_base => 'https://mirror.openshift.com/pub/origin-server/release/4/rhel-6/',
+
             }
             EOF
 
@@ -128,7 +132,7 @@ resources:
 
             yum install -y puppet facter tar bind-utils
             mkdir -p /etc/puppet/modules && cd /etc/puppet/modules
-            puppet module install openshift/openshift_origin --version 3.0.1
+            puppet module install openshift/openshift_origin --version 4.0.8
 
             export DNS_SEC_KEY="`python -c 'print $dns_sec_key$.values().pop()'`"
             export BROKER_IP="$broker_ip$"
@@ -136,16 +140,17 @@ resources:
             cat << EOF > configure_origin.pp
             class { 'openshift_origin' :
                 roles => ['node'],
-                named_ip_addr => '${BROKER_IP}',
+                nameserver_ip_addr => '${BROKER_IP}',
                 bind_key => '${DNS_SEC_KEY}',
                 domain => '$dns_prefix$',
-                register_host_with_named => true,
+                register_host_with_nameserver => true,
                 broker_hostname => 'broker.$dns_prefix$',
-                activemq_hostname => 'broker.$dns_prefix$',
+                msgserver_hostname => 'broker.$dns_prefix$',
                 node_hostname => 'node.$dns_prefix$',
                 install_method => 'yum',
-                jenkins_repo_base => 'http://pkg.jenkins-ci.org/redhat',
+                repos_base => 'https://mirror.openshift.com/pub/origin-server/release/4/rhel-6/',
                 development_mode => true,
+                install_cartridges => ['php', 'mysql', 'nodejs', 'mongodb', 'cron', 'haproxy', 'phpmyadmin'],
             }
             EOF
 
