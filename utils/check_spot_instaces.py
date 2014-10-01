@@ -9,7 +9,6 @@ Usage: */1 * * * * /usr/bin/python /script.py &> /var/log/spot.log
 TODO:
    - sort launch configuration by using a tag Priority (when a launch
     configuration is created to specify on this tag the priority, 1 is higher)
-   - send email if if not found any suitable launch configuration
 """
 
 import boto.ec2
@@ -21,8 +20,8 @@ AZ = 'eu-west-1a'
 SCALE_GROUP = 'spot'
 
 #mail settings
-TO_EMAIL = 'cristi@assist.ro'
-FROM_EMAIL = 'zeusdev@english-attack.com'
+TO_EMAIL = 'to@example.com'
+FROM_EMAIL = 'from@example.com'
 
 def process_launch_configuration():
     """get all launch configurations and return instance types
@@ -35,7 +34,6 @@ def process_launch_configuration():
         options[conf.name] = [conf.instance_type, conf.spot_price]
 
     return options
-    #return {'c3.xlarge':'0.045','m3.xlarge':'0.045','r3.xlarge':'0.045'}
 
 def sendmail(subject, content):
     import smtplib
@@ -56,6 +54,7 @@ def get_best_option():
     """
     ec2 = boto.ec2.connect_to_region(REGION)
     options = process_launch_configuration()
+    price_not_ok = 0
     for name, option in options.iteritems():
         instance_type = option[0]
         price = option[1]
@@ -76,19 +75,19 @@ def get_best_option():
             #update_group with new launchconf
             update_group(name)
 
-            #send mail
+            #send email
             content = "Updated autoscale group: %s with launch config: %s"\
                      % (SCALE_GROUP, name)
             sendmail("Updated autoscale group", content)
 
-            #cancel_open_spot_requests()
-            #launch an instance spot request ?
             break
+        else:
+            price_not_ok += 1
 
-    #send mail if not launch configurations found
-    #content = "Updated autoscale group: %s with launch configuration: %s" \
-    #           % (SCALE_GROUP, name)
-    #sendmail("[Critical] No launch configuration found", content)
+    if price_not_ok == len(options):
+        #send email if no launch configurations found
+        content = "No launch configuration found."
+        sendmail("[Critical] No launch configuration found!", content)
 
 def update_group(launch_configuration):
     """Update auto scalling group with the new launch configuration"""
@@ -97,9 +96,6 @@ def update_group(launch_configuration):
     setattr(group, 'launch_config_name', launch_configuration)
     group.update()
     print "Updated autoscale group: " + group.name
-
-def cancel_open_spot_requests():
-    """cancel current open spot requests"""
 
 def check_spot_requests():
     ec2 = boto.ec2.connect_to_region(REGION)
