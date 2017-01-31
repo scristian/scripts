@@ -1,0 +1,33 @@
+version: '2'
+
+services:
+  db:
+    image: mariadb
+    command: mysqld --innodb-buffer-pool-size=128M
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'True'
+    volumes:
+      - /work/datadb:/var/lib/mysql:rw
+    environment:
+      - "MYSQL_DATABASE=db"
+      - "MYSQL_USER=user"
+      - "MYSQL_PASSWORD=user"
+      - "MYSQL_ROOT_PASSWORD=root"
+  dataapp:
+    image: drupaldocker/php:7.1-apache
+    entrypoint: /bin/true
+  app:
+    image: drupaldocker/php:7.1-apache
+    links:
+      - db
+    ports:
+      - 32772:80
+    volumes:
+      - /work/drupal:/var/www/html
+      - /work/data:/data
+  drush:
+    image: drupaldocker/drush
+    links:
+      - db
+    volumes_from:
+      - dataapp
