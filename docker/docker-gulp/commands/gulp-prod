@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -e
+
+[ "$DEBUG" == 'true' ] && set -x
+
+# ---------
+# variables
+
+TODAY=`eval date +%Y%m%d%H%M%S`
+
+# ------ 
+echo "Running gulp production"
+
+PATH=${1-"/var/www/html/themes/novaoptic"}
+
+cd $PATH
+gulp build --production
+
+echo "Done, enjoy!"
