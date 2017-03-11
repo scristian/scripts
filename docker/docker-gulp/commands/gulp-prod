@@ -8,13 +8,16 @@ set -e
 # variables
 
 TODAY=`eval date +%Y%m%d%H%M%S`
+WORKPATH=${1-"/var/www/html/themes/novaoptic"}
 
 # ------ 
+echo "Running npm install"
+cd $WORKPATH
+npm install
+
 echo "Running gulp production"
 
-PATH=${1-"/var/www/html/themes/novaoptic"}
-
-cd $PATH
+cd $WORKPATH
 gulp build --production
 
 echo "Done, enjoy!"
